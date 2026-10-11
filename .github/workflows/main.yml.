@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Signal Lab PRO</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #080d18;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    background: #111a2b;
+    padding: 20px;
+    border-bottom: 2px solid #20d99b;
+}
+
+header h1 {
+    margin: 0;
+    color: #20d99b;
+}
+
+header p {
+    color: #aab8ce;
+    margin-bottom: 0;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 16px;
+}
+
+.card {
+    background: #111a2b;
+    border: 1px solid #293650;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+h2 {
+    font-size: 18px;
+    margin-top: 0;
+}
+
+label {
+    display: block;
+    color: #aab8ce;
+    margin: 13px 0 7px;
+    font-size: 13px;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    background: #080d18;
+    color: white;
+    border: 1px solid #34435e;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+button {
+    width: 100%;
+    margin-top: 15px;
+    padding: 14px;
+    border: none;
+    border-radius: 9px;
+    background: #20d99b;
+    color: #07121a;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:active {
+    opacity: 0.8;
+}
+
+.signal {
+    text-align: center;
+    padding: 25px 10px;
+    border-radius: 12px;
+    background: #080d18;
+}
+
+.signal h1 {
+    font-size: 38px;
+    margin: 12px 0;
+}
+
+.buy {
+    color: #20d99b;
+}
+
+.sell {
+    color: #ff6178;
+}
+
+.wait {
+    color: #f8c65c;
+}
+
+.info {
+    color: #aab8ce;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.stat {
+    background: #111a2b;
+    border: 1px solid #293650;
+    padding: 12px 5px;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.stat span {
+    display: block;
+    color: #aab8ce;
+    font-size: 11px;
+}
+
+.stat strong {
+    display: block;
+    font-size: 21px;
+    margin-top: 8px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+th, td {
+    text-align: left;
+    padding: 10px 5px;
+    border-bottom: 1px solid #293650;
+}
+
+th {
+    color: #aab8ce;
+}
+
+.history {
+    overflow-x: auto;
+}
+
+.clear {
+    background: #ff6178;
+    color: white;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    color: #71819c;
+    font-size: 12px;
+}
+
+@media (max-width: 450px) {
+    .container {
+        padding: 10px;
+    }
+
+    .card {
+        padding: 13px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>⚡ SIGNAL LAB PRO</h1>
+    <p>Trading Signal Dashboard</p>
+</header>
+
+<div class="container">
+
+    <div class="stats">
+        <div class="stat">
+            <span>Signals</span>
+            <strong id="total">0</strong>
+        </div>
+
+        <div class="stat">
+            <span>Wins</span>
+            <strong id="wins">0</strong>
+        </div>
+
+        <div class="stat">
+            <span>Win Rate</span>
+            <strong id="rate">—</strong>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>⚙️ Signal Settings</h2>
+
+        <label>Market</label>
+        <select id="market">
+            <option value="BTC/USD">BTC/USD</option>
+            <option value="Forex">Forex</option>
+            <option value="Crypto">Other Crypto</option>
+            <option value="ExpertOption">ExpertOption Demo</option>
+        </select>
+
+        <label>Asset / Pair</label>
+        <input id="asset" value="BTC/USD">
+
+        <label>Timeframe</label>
+        <select id="timeframe">
+            <option>1 Minute</option>
+            <option>5 Minutes</option>
+            <option>15 Minutes</option>
+            <option>1 Hour</option>
+        </select>
+
+        <label>Observed Market Trend</label>
+        <select id="trend">
+            <option value="up">Uptrend</option>
+            <option value="down">Downtrend</option>
+            <option value="sideways">Sideways</option>
+        </select>
+
+        <label>RSI Value (Optional)</label>
+        <input id="rsi" type="number"
+               min="0" max="100"
+               placeholder="Example: 45">
+
+        <label>Price vs EMA</label>
+        <select id="ema">
+            <option value="above">Above EMA</option>
+            <option value="below">Below EMA</option>
+            <option value="near">Near EMA / Unclear</option>
+        </select>
+
+        <button onclick="generateSignal()">
+            GENERATE DEMO SIGNAL
+        </button>
+    </div>
+
+    <div class="card">
+        <h2>📡 Latest Signal</h2>
+
+        <div class="signal">
+            <div class="info" id="selectedAsset">
+                BTC/USD
+            </div>
+
+            <h1 id="direction" class="wait">WAIT</h1>
+
+            <div class="info">
+                Rule Score:
+                <strong id="score">—</strong>
+            </div>
+
+            <p class="info" id="reason">
+                Enter your chart observations to begin.
+            </p>
+
+            <p class="info" id="signalTime"></p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🗂️ Signal History</h2>
+
+        <div class="history">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Asset</th>
+                        <th>Signal</th>
+                        <th>Score</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+
+                <tbody id="history">
+                    <tr>
+                        <td colspan="5">No signals yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p class="info">
+            Record the actual outcome of each signal to calculate
+            your observed win rate.
+        </p>
+
+        <button class="clear" onclick="clearHistory()">
+            CLEAR HISTORY
+        </button>
+    </div>
+
+    <div class="card">
+        <h2>⚠️ Important</h2>
+        <p class="info">
+            This is an educational demo. It does not receive live
+            market prices or connect to a broker. Its score is not
+            a probability of winning. Never rely on this demo alone
+            for financial decisions.
+        </p>
+    </div>
+
+</div>
+
+<footer>
+    SIGNAL LAB PRO © 2026<br>
+    Educational Use Only
+</footer>
+
+<script>
+let records = [];
+
+try {
+    records = JSON.parse(
+        localStorage.getItem("signalRecords") || "[]"
+    );
+} catch (e) {
+    records = [];
+}
+
+const $ = id => document.getElementById(id);
+
+function saveRecords() {
+    try {
+        localStorage.setItem(
+            "signalRecords",
+            JSON.stringify(records)
+        );
+    } catch (e) {}
+
+    renderHistory();
+    updateStats();
+}
+
+function updateStats() {
+    const completed = records.filter(
+        r => r.result === "WIN" || r.result === "LOSS"
+    );
+
+    const wins = completed.filter(
+        r => r.result === "WIN"
+    ).length;
+
+    $("total").textContent = records.length;
+    $("wins").textContent = wins;
+
+    $("rate").textContent = completed.length
+        ? Math.round(wins / completed.length * 100) + "%"
+        : "—";
+}
+
+function generateSignal() {
+    const trend = $("trend").value;
+    const ema = $("ema").value;
+    const rsiText = $("rsi").value.trim();
+
+    const rsi = rsiText === ""
+        ? null
+        : Number(rsiText);
+
+    if (
+        rsi !== null &&
+        (!Number.isFinite(rsi) || rsi < 0 || rsi > 100)
+    ) {
+        alert("RSI must be between 0 and 100.");
+        return;
+    }
+
+    let buy = 0;
+    let sell = 0;
+    let reasons = [];
+
+    if (trend === "up") {
+        buy += 2;
+        reasons.push("Observed trend is upward.");
+    } else if (trend === "down") {
+        sell += 2;
+        reasons.push("Observed trend is downward.");
+    } else {
+        reasons.push("Market trend is unclear.");
+    }
+
+    if (ema === "above") {
+        buy++;
+        reasons.push("Price is above EMA.");
+    } else if (ema === "below") {
+        sell++;
+        reasons.push("Price is below EMA.");
+    } else {
+        reasons.push("EMA confirmation is unclear.");
+    }
+
+    if (rsi !== null) {
+        if (rsi < 30) {
+            buy += 2;
+            reasons.push("RSI is below 30.");
+        } else if (rsi > 70) {
+            sell += 2;
+            reasons.push("RSI is above 70.");
+        } else if (rsi >= 50) {
+            buy++;
+            reasons.push("RSI is at or above 50.");
+        } else {
+            sell++;
+            reasons.push("RSI is below 50.");
+        }
+    } else {
+        reasons.push("RSI was not supplied.");
+    }
+
+    let signal = "WAIT";
+
+    if (buy > sell) {
+        signal = "BUY";
+    } else if (sell > buy) {
+        signal = "SELL";
+    }
+
+    let score = signal === "WAIT"
+        ? 45
+        : Math.min(
+            88,
+            52 + Math.abs(buy - sell) * 9
+        );
+
+    $("direction").textContent = signal;
+    $("direction").className = signal.toLowerCase();
+
+    $("score").textContent = score + "%";
+
+    $("selectedAsset").textContent =
+        $("asset").value + " · " + $("timeframe").value;
+
+    $("reason").textContent = reasons.join(" ");
+
+    const now = new Date();
+
+    $("signalTime").textContent =
+        "Generated: " + now.toLocaleString();
+
+    records.push({
+        id: Date.now().toString(),
+        time: now.toLocaleTimeString(),
+        asset: $("asset").value,
+        signal: signal,
+        score: score,
+        result: "PENDING"
+    });
+
+    if (records.length > 100) {
+        records = records.slice(-100);
+    }
+
+    saveRecords();
+}
+
+function renderHistory() {
+    const body = $("history");
+
+    if (records.length === 0) {
+        body.innerHTML =
+            '<tr><td colspan="5">No signals yet.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = records.slice().reverse().map(r => `
+        <tr>
+            <td>${escapeHTML(r.time)}</td>
+            <td>${escapeHTML(r.asset)}</td>
+            <td class="${r.signal.toLowerCase()}">
+                ${escapeHTML(r.signal)}
+            </td>
+            <td>${r.score}%</td>
+            <td>
+                ${
+                    r.result === "PENDING"
+                    ? `<button style="width:auto;padding:6px"
+                        onclick="recordResult('${r.id}','WIN')">
+                        WIN</button>
+                       <button style="width:auto;padding:6px;
+                        background:#ff6178;color:white"
+                        onclick="recordResult('${r.id}','LOSS')">
+                        LOSS</button>`
+                    : escapeHTML(r.result)
+                }
+            </td>
+        </tr>
+    `).join("");
+}
+
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, c => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[c]);
+}
+
+function recordResult(id, result) {
+    const record = records.find(r => r.id === id);
+
+    if (!record) return;
+
+    record.result = result;
+    saveRecords();
+}
+
+function clearHistory() {
+    if (!confirm("Delete all signal history?")) return;
+
+    records = [];
+
+    try {
+        localStorage.removeItem("signalRecords");
+    } catch (e) {}
+
+    saveRecords();
+
+    $("direction").textContent = "WAIT";
+    $("direction").className = "wait";
+    $("score").textContent = "—";
+    $("reason").textContent =
+        "Enter your chart observations to begin.";
+    $("signalTime").textContent = "";
+}
+
+$("market").addEventListener("change", function() {
+    const market = this.value;
+
+    if (market === "BTC/USD") {
+        $("asset").value = "BTC/USD";
+    } else if (market === "Forex") {
+        $("asset").value = "EUR/USD";
+    } else if (market === "Crypto") {
+        $("asset").value = "ETH/USD";
+    } else {
+        $("asset").value = "Manual Asset";
+    }
+});
+
+renderHistory();
+updateStats();
+</script>
+
+</body>
+</html>
