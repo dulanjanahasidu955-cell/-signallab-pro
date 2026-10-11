@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>Signal Lab Live</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#121d30;--line:#293953;--text:#edf3ff;--muted:#a8b6cc;--green:#35d49a;--red:#ff6b78;--yellow:#ffd166;--blue:#75a7ff}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#0b1220,#111c30);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}main{max-width:900px;margin:auto;padding:18px 12px 40px}.brand{display:flex;align-items:center;gap:12px;margin:4px 0 18px}.logo{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:#20375b;font-size:24px}.brand h1{font-size:22px;margin:0}.brand p{margin:3px 0 0;color:var(--muted);font-size:13px}.card{background:rgba(18,29,48,.97);border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0}.card h2{font-size:17px;margin:0 0 10px}.muted{color:var(--muted);font-size:13px;line-height:1.55}.notice{border-left:3px solid var(--yellow);padding:10px 12px;background:#2a251a;border-radius:6px;color:#f5dfaa;font-size:13px;line-height:1.55;margin-bottom:12px}.status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}.dot{width:9px;height:9px;border-radius:50%;background:var(--yellow);display:inline-block}.dot.on{background:var(--green)}.dot.off{background:var(--red)}.price{font-size:28px;font-weight:800;margin:9px 0 3px;overflow-wrap:anywhere}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.metric{background:#17243a;border-radius:10px;padding:10px}.metric small{display:block;color:var(--muted);font-size:11px}.metric strong{display:block;margin-top:5px;font-size:17px;overflow-wrap:anywhere}.signalbox{text-align:center;padding:18px;background:#0b1424;border:1px solid var(--line);border-radius:13px}.signal{font-size:28px;font-weight:850;letter-spacing:1px}.buy{color:var(--green)}.sell{color:var(--red)}.wait{color:var(--yellow)}#chart{height:470px;width:100%;overflow:hidden;border-radius:10px}button,select{font:inherit;border-radius:10px;padding:11px;background:#0b1424;border:1px solid #33435d;color:var(--text)}button{background:#263852;cursor:pointer}.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.controls button{flex:1}.footer{text-align:center;color:var(--muted);font-size:12px;padding-top:10px}@media(max-width:520px){.row{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(3,1fr)}#chart{height:390px}.price{font-size:25px}}
+</style>
+</head>
+<body><main>
+<header class="brand"><div class="logo">📈</div><div><h1>Signal Lab Live</h1><p>Live crypto feed • EMA + RSI • Mobile demo</p></div></header>
+<div class="notice"><b>වැදගත්:</b> මෙම version එක Binance BTCUSDT public market feed භාවිතා කරයි. TradingView chart එක chart display සඳහායි; signal එක TradingView widget එකෙන් කියවන්නේ නැහැ. BTCUSDT මිල සහ ExpertOption OTC/forex මිල එකම නොවෙන්න පුළුවන්. මෙය buy/sell order දමන්නේ නැහැ, ලාභ සහතික කරන්නේත් නැහැ. මුලින් demo/paper trading පමණක් කරන්න.</div>
+<section class="card">
+<div class="status"><span id="dot" class="dot"></span><span id="connection">Connecting to live market data…</span></div>
+<div class="price" id="price">Waiting for data…</div><div class="muted">BTC / USDT · Binance public trades · Live last price</div>
+<div class="metrics"><div class="metric"><small>1-minute candles</small><strong id="candles">0</strong></div><div class="metric"><small>Fast EMA (5)</small><strong id="ef">—</strong></div><div class="metric"><small>Slow EMA (13)</small><strong id="es">—</strong></div></div>
+</section>
+<section class="card"><h2>📊 Live chart</h2><p class="muted">TradingView chart. You can change symbols on the chart, but the signal panel below remains linked to BTCUSDT.</p><div id="chart"></div></section>
+<section class="card"><h2>🎯 Signal panel</h2><div class="signalbox"><div id="signal" class="signal wait">WAIT</div><p id="reason" class="muted">Collecting candle data. The indicator needs enough completed candles before it can calculate.</p><div class="metrics"><div class="metric"><small>RSI (14)</small><strong id="rsi">—</strong></div><div class="metric"><small>Last candle</small><strong id="lastcandle">—</strong></div><div class="metric"><small>Updated</small><strong id="updated">—</strong></div></div></div>
+<div class="controls" style="margin-top:12px"><button id="reconnect">Reconnect live feed</button><button id="reset">Reset local candle history</button><button id="enableSound">Enable sound alerts</button></div>
+<div class="notice" id="soundStatus" style="margin-top:10px">Sound alerts are off. Tap “Enable sound alerts” and keep this page open.</div>
+<section class="card" style="margin:14px 0 0;padding:13px">
+<h2>📒 Signal Accuracy Tracker</h2>
+<p class="muted">Signals are logged only after a completed 1-minute candle. Each logged signal is checked against the next completed candle's direction. This is a simple educational proxy, not a real ExpertOption trade result or payout calculation.</p>
+<div class="metrics"><div class="metric"><small>Checked signals</small><strong id="checked">0</strong></div><div class="metric"><small>Correct direction</small><strong id="correct">0</strong></div><div class="metric"><small>Direction accuracy</small><strong id="accuracy">—</strong></div></div>
+<div class="controls" style="margin-top:12px"><button id="clearLog">Clear tracker</button><button id="exportLog">Export CSV</button></div>
+<div id="logList" class="muted" style="margin-top:12px">No signals logged yet.</div>
+</section>
+<p class="muted">Rule set: BUY when EMA5 &gt; EMA13, latest close rises, and RSI is 50–70. SELL when EMA5 &lt; EMA13, latest close falls, and RSI is 30–50. Otherwise WAIT. Rules are illustrative and have not been shown to be profitable.</p></section>
+<section class="card"><h2>ℹ️ මේක භාවිතා කරන විදිහ</h2><p class="muted">1. Internet connection එක on කරලා page එක විවෘත කරන්න.<br>2. “Connected” කියලා පෙන්වන තුරු ඉන්න.<br>3. Indicator එකට completed 1-minute candles එකතු වෙන්න කාලයක් දෙන්න.<br>4. Signal එක WAIT නම් trade නොකර ඉන්න. BUY/SELL පෙනුණත් ඒක අනිවාර්ය උපදෙසක් නෙවෙයි.<br>5. Signal accuracy එක පරීක්ෂා කරන්න signal එක ලැබුණු වෙලාව, ඊළඟ candle result එක, win/loss ஆகியவற்றை ලියා demo test කරන්න.</p></section>
+<div class="footer">Educational prototype only • Not financial advice • No trade execution</div>
+</main>
+<script>
+(function(){
+ const $=id=>document.getElementById(id);
+ let socket=null, reconnectTimer=null, candles=[], current=null, closedCount=0, lastPrice=null;
+ let audioCtx=null, soundEnabled=false, pendingCheck=null, signalLog=[];
+ const MAX=250;
+ function setStatus(s,on){$('connection').textContent=s;$('dot').className='dot '+(on?'on':s.toLowerCase().includes('error')||s.toLowerCase().includes('closed')?'off':'');}
+ function connect(){
+   if(socket){try{socket.onclose=null;socket.close()}catch(e){}}
+   clearTimeout(reconnectTimer);setStatus('Connecting to Binance live feed…',false);
+   try{socket=new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1m');}
+   catch(e){setStatus('Error opening connection. Check internet.',false);reconnectTimer=setTimeout(connect,5000);return;}
+   socket.onopen=()=>setStatus('Connected · receiving BTCUSDT 1m candles',true);
+   socket.onmessage=e=>{
+     let d;try{d=JSON.parse(e.data)}catch(err){return}
+     if(!d.k)return;const k=d.k;
+     const c={t:k.t,o:+k.o,h:+k.h,l:+k.l,c:+k.c,closed:!!k.x};
+     lastPrice=c.c;$('price').textContent=c.c.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
+     if(c.closed){
+       if(!candles.length||candles[candles.length-1].t!==c.t){candles.push(c);if(candles.length>MAX)candles.shift();closedCount++;}
+       current=null;render();
+     }else{current=c;renderPriceOnly();}
+   };
+   socket.onerror=()=>setStatus('Connection error · retrying…',false);
+   socket.onclose=()=>{setStatus('Connection closed · reconnecting…',false);reconnectTimer=setTimeout(connect,4000)};
+ }
+ function ema(vals,p){if(vals.length<p)return null;let x=vals[0],a=2/(p+1);for(let i=1;i<vals.length;i++)x=vals[i]*a+x*(1-a);return x;}
+ function rsi(vals,p){if(vals.length<p+1)return null;let g=0,l=0;for(let i=vals.length-p;i<vals.length;i++){let d=vals[i]-vals[i-1];if(d>0)g+=d;else l-=d;}if(l===0)return g===0?50:100;return 100-100/(1+(g/p)/(l/p));}
+ function renderPriceOnly(){if(current)$('lastcandle').textContent='forming';}
+ function playAlert(kind){
+   if(!soundEnabled||!audioCtx)return;
+   try{
+     const now=audioCtx.currentTime;
+     const osc=audioCtx.createOscillator(), gain=audioCtx.createGain();
+     osc.type='sine';osc.frequency.value=kind==='BUY'?880:kind==='SELL'?440:660;
+     gain.gain.setValueAtTime(0.001,now);gain.gain.exponentialRampToValueAtTime(0.16,now+0.025);gain.gain.exponentialRampToValueAtTime(0.001,now+0.28);
+     osc.connect(gain);gain.connect(audioCtx.destination);osc.start(now);osc.stop(now+0.3);
+   }catch(e){}
+ }
+ function saveTracker(){try{localStorage.setItem('signalLabLog',JSON.stringify(signalLog));}catch(e){}}
+ function loadTracker(){try{signalLog=JSON.parse(localStorage.getItem('signalLabLog')||'[]');if(!Array.isArray(signalLog))signalLog=[];}catch(e){signalLog=[];}renderTracker();}
+ function renderTracker(){
+   const done=signalLog.filter(x=>x.result==='correct'||x.result==='wrong');
+   const wins=done.filter(x=>x.result==='correct').length;
+   $('checked').textContent=String(done.length);$('correct').textContent=String(wins);
+   $('accuracy').textContent=done.length?(100*wins/done.length).toFixed(1)+'%':'—';
+   $('logList').innerHTML='';
+   if(!signalLog.length){$('logList').textContent='No signals logged yet.';return;}
+   signalLog.slice(-12).reverse().forEach(x=>{
+     const d=document.createElement('div');d.style.cssText='padding:8px 0;border-bottom:1px solid #293953';
+     const result=x.result==='correct'?'Correct':x.result==='wrong'?'Wrong':x.result==='flat'?'Flat / unscored':'Pending next candle';
+     d.textContent=x.time+' · '+x.signal+' · price '+x.price+' · '+result;
+     $('logList').appendChild(d);
+   });
+ }
+ function render(){
+   const vals=candles.map(c=>c.c);$('candles').textContent=String(vals.length);
+   $('updated').textContent=new Date().toLocaleTimeString();
+   if(vals.length<20){$('signal').textContent='WAIT';$('signal').className='signal wait';$('reason').textContent='Gathering enough completed 1-minute candles ('+vals.length+'/20). Please wait; no signal yet.';$('lastcandle').textContent=candles.length?'closed':'—';return;}
+   // Evaluate prior logged signal using this newly completed candle.
+   if(pendingCheck){
+     const move=vals[vals.length-1]-pendingCheck.price;
+     pendingCheck.result=move===0?'flat':((pendingCheck.signal==='BUY'&&move>0)||(pendingCheck.signal==='SELL'&&move<0))?'correct':'wrong';
+     pendingCheck.nextPrice=vals[vals.length-1];pendingCheck=null;saveTracker();renderTracker();
+   }
+   const ef=ema(vals.slice(-Math.max(40,13)),5), es=ema(vals.slice(-Math.max(40,13)),13), rv=rsi(vals,14), last=vals[vals.length-1], prev=vals[vals.length-2];
+   $('ef').textContent=ef.toFixed(2);$('es').textContent=es.toFixed(2);$('rsi').textContent=rv===null?'—':rv.toFixed(1);
+   let s='WAIT',cls='wait',why='Mixed conditions or no clear rule-based signal.';
+   if(ef>es&&last>prev&&rv>=50&&rv<70){s='BUY';cls='buy';why='EMA5 above EMA13, last close rose, RSI in 50–70 range.'}
+   else if(ef<es&&last<prev&&rv<50&&rv>30){s='SELL';cls='sell';why='EMA5 below EMA13, last close fell, RSI in 30–50 range.'}
+   $('signal').textContent=s;$('signal').className='signal '+cls;$('reason').textContent=why;
+   // Log only when a new completed candle creates a BUY or SELL signal.
+   if(s==='BUY'||s==='SELL'){
+     const latest=signalLog[signalLog.length-1];
+     if(!latest||latest.candleTime!==candles[candles.length-1].t){
+       const item={time:new Date().toLocaleString(),candleTime:candles[candles.length-1].t,signal:s,price:last,result:'pending'};
+       signalLog.push(item);if(signalLog.length>200)signalLog.shift();pendingCheck=item;saveTracker();renderTracker();playAlert(s);
+     }
+   }
+   $('lastcandle').textContent=last>prev?'UP':last<prev?'DOWN':'FLAT';
+ }
+ $('reconnect').onclick=connect;
+ $('reset').onclick=()=>{candles=[];current=null;closedCount=0;pendingCheck=null;render();setStatus('History reset · collecting new candles',false)};
+ $('enableSound').onclick=async()=>{
+   try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC){$('soundStatus').textContent='This browser does not support sound alerts.';return;}
+     audioCtx=audioCtx||new AC();if(audioCtx.state==='suspended')await audioCtx.resume();soundEnabled=true;
+     $('soundStatus').textContent='Sound alerts enabled. BUY and SELL signals will play a short tone while this page is open.';
+     $('enableSound').textContent='Sound alerts enabled';playAlert('BUY');
+   }catch(e){$('soundStatus').textContent='Could not enable sound. Check browser permissions and tap again.';}
+ };
+ $('clearLog').onclick=()=>{signalLog=[];pendingCheck=null;saveTracker();renderTracker()};
+ $('exportLog').onclick=()=>{
+   const rows=[['time','signal','price','result','next_price'],...signalLog.map(x=>[x.time,x.signal,x.price,x.result,x.nextPrice??''])];
+   const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\\n');
+   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='signal-lab-tracker.csv';a.click();URL.revokeObjectURL(a.href);
+ };
+ loadTracker();
+ // Embed official TradingView chart widget; it is visual only and separate from the Binance signal calculation.
+ const script=document.createElement('script');script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';script.async=true;
+ script.innerHTML=JSON.stringify({autosize:true,symbol:'BINANCE:BTCUSDT',interval:'1',timezone:'Asia/Colombo',theme:'dark',style:'1',locale:'en',allow_symbol_change:true,calendar:false,hide_side_toolbar:true,hide_top_toolbar:false,hide_legend:false,save_image:false,details:false,hotlist:false,studies:['STD;EMA'],support_host:'https://www.tradingview.com'});
+ $('chart').appendChild(script);
+ connect();
+})();
+</script>
+</body></html>
